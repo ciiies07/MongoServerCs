@@ -1,19 +1,9 @@
-const supertest = require("supertest");
 const { app, server } = require("../index");
 const mongoose = require("mongoose");
 const Player = require('../model/playerModel')
-const api = supertest(app);
+const {api, PlayerTest} = require('./helpers')
 
-const PlayerTest = [
-  {
-    name: "Jancy Ruben",
-    team: "Cavs",
-  },
-  {
-    name: "Pedro Infante",
-    team: "Warriors",
-  },
-];
+console.log(PlayerTest);
 
 beforeEach(async () => {
     await Player.deleteMany({})

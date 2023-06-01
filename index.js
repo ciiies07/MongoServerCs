@@ -129,7 +129,7 @@ app.put('/api/players/:id', (req, res, next) => {
   }
 
   Player.findByIdAndUpdate(id, newPlayerInfo, {new: true})
-  .then(result => res.json(result))
+  .then(result => res.json(wresult))
   .catch(err => console.error(err))
 })
 
@@ -137,9 +137,9 @@ app.use(castError)
 
 app.use(NotFound);
 
-const port = process.env.PORT;
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const PORT = process.env.PORT || 3001;
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = {app, server};
