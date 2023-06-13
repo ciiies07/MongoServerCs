@@ -4,6 +4,10 @@ const {model, Schema } = mongoose
 const playerSchema = new Schema({
     name: String,
     team: String,
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    } 
 })
 
 playerSchema.set('toJSON', {

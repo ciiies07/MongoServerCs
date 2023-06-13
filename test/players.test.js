@@ -1,18 +1,23 @@
-const { app, server } = require("../index");
+const { server } = require("../index");
 const mongoose = require("mongoose");
 const Player = require('../model/playerModel')
-const {api, PlayerTest} = require('./helpers')
+const {api, PlayerTest, getAllPlayersNames} = require('./helpers')
 
 console.log(PlayerTest);
 
 beforeEach(async () => {
     await Player.deleteMany({})
 
-    const player1 = new Player(PlayerTest[0]);
-    player1.save()
+    //parallel
+    // const playerOb = PlayerTest.map(player => new Player(player))
+    // const promises = playerOb.map(player => player.save())
+    // await Promise.all(promises);
 
-    const player2 = new Player(PlayerTest[1])
-    player2.save()
+    //sequencial
+    for(const player of PlayerTest){
+      const playeObj = new Player(player);
+      await playeObj.save();
+    }
 })
 
 test("players are returned as json", async () => {
@@ -22,9 +27,9 @@ test("players are returned as json", async () => {
     .expect("Content-Type", /application\/json/);
 });
 
-test("there are 2 players", async () => {
+test(`there are ${PlayerTest.length} players`, async () => {
   const response = await api.get("/api/players");
-  expect(response.body).toHaveLength(2);
+  expect(response.body).toHaveLength(PlayerTest.length);
 });
 
 test("not add a new player without name", async () => {
@@ -53,11 +58,37 @@ test("add new player", async () => {
     .expect(200)
     .expect('Content-Type', /application\/json/)
 
-    const res = await api.get('/api/players')
+    const {players, res} = await getAllPlayersNames()
 
-    const players = res.body.map(player => player.name)
     expect(res.body).toHaveLength(PlayerTest.length + 1);
     expect(players).toContain(newPlayer.name)
+})
+
+test('a player can be deleted', async () => {
+  const {res: firstRes} = await getAllPlayersNames();
+  const {body: playerss} = firstRes;
+  const playerToDelete = playerss[0];
+
+  await api
+  .delete(`/api/players/${playerToDelete.id}`)
+  .expect(204)
+
+  const { players, res: secondRes } = await getAllPlayersNames();
+  // const { body: contentNames } = secondRes;
+  // const names = contentNames.map((it) => it.name);
+  
+  expect(secondRes.body).toHaveLength(PlayerTest.length - 1)
+  expect(players).not.toContain(playerToDelete.name)
+})
+
+test("a player do not exist can not be deleted", async () => {
+  await api
+  .delete('/api/players/abc123')
+  .expect(400)
+
+  const { res } = await getAllPlayersNames();
+
+  expect(res.body).toHaveLength(PlayerTest.length)
 })
 
 afterAll(() => {

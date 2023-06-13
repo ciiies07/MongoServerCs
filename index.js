@@ -88,14 +88,19 @@ app.get("/api/players/team/:team", (req, res, next) => {
   })
 });
 
-app.delete("/api/players/:id", (req, res, next) => {
+app.delete("/api/players/:id", async (req, res, next) => {
   const {id} = req.params
   
-  Player.findByIdAndRemove(id)
-  .then(() => {
+  // Player.findByIdAndRemove(id)
+  // .then(() => {
+  //   res.status(204).end();
+  // }).catch(error => next(error))
+  try {
+    await Player.findByIdAndRemove(id)
     res.status(204).end();
-  }).catch(error => next(error))
-  
+  } catch (error) {
+    next(error)
+  }  
 });
 
 app.post("/api/players", (req, res) => {
@@ -129,13 +134,12 @@ app.put('/api/players/:id', (req, res, next) => {
   }
 
   Player.findByIdAndUpdate(id, newPlayerInfo, {new: true})
-  .then(result => res.json(wresult))
+  .then(result => res.json(result))//resul y wresult?
   .catch(err => console.error(err))
 })
 
-app.use(castError)
-
 app.use(NotFound);
+app.use(castError)
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
