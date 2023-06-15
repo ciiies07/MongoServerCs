@@ -4,10 +4,12 @@ require('./db/connect.js');
 const express = require("express");
 //import http from 'http';
 const cors = require('cors');
+const app = express();
 const Player = require('./model/playerModel.js');
 const NotFound = require('./errors/not_Found.js');
 const castError = require('./errors/castError.js');
-const app = express();
+const usersRouter = require('./controllers/users.js');
+
 
 app.use(express.json());
 // app.use((req, res, next) => {
@@ -138,6 +140,7 @@ app.put('/api/players/:id', (req, res, next) => {
   .catch(err => console.error(err))
 })
 
+app.use('/api/users/', usersRouter)
 app.use(NotFound);
 app.use(castError)
 
