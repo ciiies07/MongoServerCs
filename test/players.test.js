@@ -49,7 +49,7 @@ test("not add a new player without name", async () => {
 test("add new player", async () => {
     const newPlayer = {
         name: 'Guillermo Blanco',
-        team: 'Heat'
+        team: 'Heat',
     }
 
     await api
