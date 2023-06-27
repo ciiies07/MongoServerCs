@@ -8,10 +8,14 @@ const app = express();
 const Player = require("./model/playerModel.js");
 const NotFound = require("./errors/not_Found.js");
 const castError = require("./errors/castError.js");
+
+const userExtractor = require('./errors/userExtractor.js')
 const usersRouter = require("./controllers/users.js");
+const loginRouter = require("./controllers/login.js");
 const User = require("./model/UserModel.js");
 
 app.use(express.json());
+app.use(cors());
 // app.use((req, res, next) => {
 //   console.log(req.method);
 //   console.log(req.path);
@@ -59,12 +63,13 @@ app.get("/", (req, res) => {
   res.send("<h1>API DE JUGADORES DE LA NBA!<h1/>");
 });
 
-app.get("/api/players", (req, res) => {
-  Player.find({}).populate('user', {
-    name: 1,
-    username: 1,
-    _id: 0,
-  })
+app.get("/api/players", cors(), (req, res) => {
+  Player.find({})
+    .populate("user", {
+      name: 1,
+      username: 1,
+      _id: 0,
+    })
     .then((players) => res.json(players))
     .catch((err) => console.error(err));
 });
@@ -98,7 +103,7 @@ app.get("/api/players/team/:team", (req, res, next) => {
     });
 });
 
-app.delete("/api/players/:id", async (req, res, next) => {
+app.delete("/api/players/:id", userExtractor , async (req, res, next) => {
   const { id } = req.params;
 
   // Player.findByIdAndRemove(id)
@@ -113,12 +118,16 @@ app.delete("/api/players/:id", async (req, res, next) => {
   }
 });
 
-app.post("/api/players", async (req, res, next) => {
+app.post("/api/players", userExtractor , async (req, res, next) => {
   try {
-    const { name, team, userId } = req.body;
-   
+    const { name, team } = req.body;
+
+    console.log(req.userId);
+    //sacar el userId de req
+    const {userId} = req
+
     const user = await User.findById(userId);
-    
+
     if (!name) {
       return res.status(400).json({
         error: "El nombre del jugador es un campo requerido.",
@@ -133,17 +142,17 @@ app.post("/api/players", async (req, res, next) => {
 
     const savedPlayer = await newPlayer.save();
 
-    user.players = user.players.concat(savedPlayer._id)
-    await user.save()
+    user.players = user.players.concat(savedPlayer._id);
+    await user.save();
 
     res.json(savedPlayer);
     console.log("jugador agregado...");
   } catch (error) {
-    next(error)
+    next(error);
   }
 });
 
-app.put("/api/players/:id", (req, res, next) => {
+app.put("/api/players/:id", userExtractor , (req, res, next) => {
   const { id } = req.params;
   const player = req.body;
 
@@ -157,7 +166,8 @@ app.put("/api/players/:id", (req, res, next) => {
     .catch((err) => console.error(err));
 });
 
-app.use("/api/users/", usersRouter);
+app.use("/api/users/", cors(), usersRouter);
+app.use("/api/login/", cors(), loginRouter);
 app.use(NotFound);
 app.use(castError);
 
